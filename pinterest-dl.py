@@ -7,6 +7,9 @@ import os
 
 download_dir = os.getcwd() + '/pinterest/'
 
+if not os.path.exists(download_dir):
+	os.mkdir(download_dir)
+
 pinterest = Pinterest(username='username')  # YOUR USERNAME
 
 boards = pinterest.boards()
