@@ -15,6 +15,14 @@ pinterest = Pinterest(username='username')  # YOUR USERNAME
 boards = pinterest.boards()
 
 
+downloaded_images = []
+for folder in os.listdir(download_dir):
+	path = os.path.join(download_dir, folder)
+	if os.path.isfile(path):
+		continue
+	downloaded_images.extend([i.split('.')[0] for i in os.listdir(path)])
+
+
 for target_board in boards: 
 
 	print('\n', target_board['name'], "\n")
@@ -43,7 +51,7 @@ for target_board in boards:
 
 	for pin in board_pins:
 
-		if pin['id'] in ' '.join(os.listdir(download_dir)):
+		if pin['id'] in downloaded_images:
 			print("Skipping:", pin['id'])
 			continue
 
