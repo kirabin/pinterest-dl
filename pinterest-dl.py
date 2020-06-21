@@ -6,9 +6,19 @@ import json
 import shutil
 import os 
 
+############################################################################
+############################################################################
+# Customize here
 
-# Set boards to download from 
-filter_boards = ["Reference", "Art"]
+
+filter_boards = ["Reference", "Art"]        # Boards you need
+pinterest = Pinterest(username='username')  # Username
+
+############################################################################
+############################################################################
+
+
+
 
 new_downloads_count = 0
 download_dir = os.getcwd() + '/pinterest/'
@@ -18,7 +28,7 @@ download_dir = os.getcwd() + '/pinterest/'
 if not os.path.exists(download_dir):
 	os.mkdir(download_dir)
 
-pinterest = Pinterest(username='username')  # YOUR USERNAME
+
 
 boards = pinterest.boards()
 
