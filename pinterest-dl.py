@@ -3,9 +3,17 @@
 from py3pin.Pinterest import Pinterest
 import requests
 import json
+import shutil
 import os 
 
+
+# Set boards to download from 
+filter_boards = ["Reference", "Art"]
+
+new_downloads_count = 0
 download_dir = os.getcwd() + '/pinterest/'
+
+
 
 if not os.path.exists(download_dir):
 	os.mkdir(download_dir)
@@ -13,7 +21,6 @@ if not os.path.exists(download_dir):
 pinterest = Pinterest(username='username')  # YOUR USERNAME
 
 boards = pinterest.boards()
-
 
 downloaded_images = []
 for folder in os.listdir(download_dir):
@@ -23,9 +30,13 @@ for folder in os.listdir(download_dir):
 	downloaded_images.extend([i.split('.')[0] for i in os.listdir(path)])
 
 
+
+boards = boards if not filter_boards else [i for i in boards if i['name'] in filter_boards]
+
+
 for target_board in boards: 
 
-	print('\n', target_board['name'], "\n")
+	print('\n' + target_board['name'], "\n")
 
 	board_pins = []
 	pin_batch = pinterest.board_feed(board_id=target_board['id'])
@@ -49,6 +60,8 @@ for target_board in boards:
 				for chunk in r.iter_content(1024):
 					f.write(chunk)
 
+			new_downloads_count += 1
+
 	for pin in board_pins:
 
 		if pin['id'] in downloaded_images:
@@ -62,3 +75,11 @@ for target_board in boards:
 			download_image(url, download_dir + pin['id'] + extension, pin['id'])
 		except KeyError: 
 			pass
+
+print(F"\n\n{new_downloads_count} images were downloaded")
+
+
+data_path = os.path.join(os.getcwd(), 'data')
+print(data_path)
+if os.path.exists(data_path):
+	shutil.rmtree(data_path)
