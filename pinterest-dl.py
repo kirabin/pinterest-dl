@@ -1,95 +1,108 @@
 # Download all images in board
 
-from py3pin.Pinterest import Pinterest
+from py3pin.Pinterest import Pinterest as PinterestBase
 import requests
 import json
 import shutil
-import os 
-
-############################################################################
-############################################################################
-# Customize here
+import os
 
 
-filter_boards = ["Reference", "Art"]        # Boards you need
-pinterest = Pinterest(username='username')  # Username
+class Pinterest(PinterestBase):
 
-############################################################################
-############################################################################
+	def __init__(self, settings):
+		super().__init__(username=settings['username'])
 
+		self.path = self.create_dir()
+		self.boards = self.get_boards(settings['board_names'])
+		self.downloaded_images = self.get_downloaded_images()
+		self.new_downloads_count = 0
 
+	def create_dir(self):
+		path = os.path.join(os.getcwd(), 'pinterest')
 
+		if not os.path.exists(path):
+			os.mkdir(path)
 
-new_downloads_count = 0
-download_dir = os.getcwd() + '/pinterest/'
+		return path
 
+	def create_dir_board(self, board):
+		path = os.path.join(self.path, board['name'])
+		if not os.path.exists(path):
+			os.mkdir(path)
 
+		return path
 
-if not os.path.exists(download_dir):
-	os.mkdir(download_dir)
+	def get_boards(self, board_names):
+		if not board_names:
+			return self.boards()
 
+		return [i for i in self.boards() if i['name'] in board_names]
 
+	def get_downloaded_images(self):
 
-boards = pinterest.boards()
+		downloaded_images = []
+		for folder in os.listdir(self.path):
+			path = os.path.join(self.path, folder)
+			if os.path.isfile(path):
+				continue
+			downloaded_images.extend([i.split('.')[0] for i in os.listdir(path)])
 
-downloaded_images = []
-for folder in os.listdir(download_dir):
-	path = os.path.join(download_dir, folder)
-	if os.path.isfile(path):
-		continue
-	downloaded_images.extend([i.split('.')[0] for i in os.listdir(path)])
+		return downloaded_images
 
+	def delete_temp_files(self):
+		data_path = os.path.join(os.getcwd(), 'data')
+		if os.path.exists(data_path):
+			shutil.rmtree(data_path)
 
+	def get_board_pins(self, board):
+		pins = []
+		pin_batch = pinterest.board_feed(board_id=board['id'])
+		while len(pin_batch) > 0:
+			pins += pin_batch
+			pin_batch = pinterest.board_feed(board_id=board['id'])
 
-boards = boards if not filter_boards else [i for i in boards if i['name'] in filter_boards]
+		return pins
 
-
-for target_board in boards: 
-
-	print('\n' + target_board['name'], "\n")
-
-	board_pins = []
-	pin_batch = pinterest.board_feed(board_id=target_board['id'])
-
-
-	download_dir = os.getcwd() + '/pinterest/' + target_board['name'] + '/' 
-
-	if not os.path.exists(download_dir):
-		os.mkdir(download_dir)
-
-	while len(pin_batch) > 0:
-		board_pins += pin_batch
-		pin_batch = pinterest.board_feed(board_id=target_board['id'])
-
-
-	def download_image(url, path, name):
-		r = requests.get(url=url, stream=True)
-		if r.status_code == 200:
+	def download_image(self, url, path, name):
+		response = requests.get(url,)
+		if response.status_code == 200:
 			print("Downloading:", name)
 			with open(path, 'wb') as f:
-				for chunk in r.iter_content(1024):
-					f.write(chunk)
+				f.write(response.content)
 
-			new_downloads_count += 1
+			self.new_downloads_count += 1
 
-	for pin in board_pins:
+	def download_boards(self):
+		for board in self.boards:
+			print('\n' + board['name'])
 
-		if pin['id'] in downloaded_images:
-			print("Skipping:", pin['id'])
-			continue
+			path = self.create_dir_board(board)
 
-		try: 
-			url = pin['images']['orig']['url']
-			indx = str(url).rfind('.')
-			extension = str(url)[indx:]
-			download_image(url, download_dir + pin['id'] + extension, pin['id'])
-		except KeyError: 
-			pass
+			board['pins'] = self.get_board_pins(board)
+			for pin in board['pins']:
 
-print(F"\n\n{new_downloads_count} images were downloaded")
+				if pin['id'] in self.downloaded_images:
+					print("Skipping:", pin['id'])
+					continue
+
+				try:
+					url = pin['images']['orig']['url']
+					extension = os.path.splitext(url)[1]  # str(url)[str(url).rfind('.'):]
+					self.download_image(url, f"{path}/{pin['id']}{extension}", pin['id'])
+				except KeyError:
+					pass
+
+		print(f"\n{self.new_downloads_count} images were downloaded")
+
+############################################################################
+# Customize settings
 
 
-data_path = os.path.join(os.getcwd(), 'data')
-print(data_path)
-if os.path.exists(data_path):
-	shutil.rmtree(data_path)
+settings = {
+	"username": "kirabin_pin",
+	"board_names": ["Reference", "Art"]  # leave blank to download all boards
+}
+
+pinterest = Pinterest(settings)
+pinterest.download_boards()
+pinterest.delete_temp_files()
