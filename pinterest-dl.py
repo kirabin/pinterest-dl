@@ -94,13 +94,11 @@ class Pinterest(PinterestBase):
 
 		print(f"\n{self.new_downloads_count} images were downloaded")
 
-############################################################################
+
 # Customize settings
-
-
 settings = {
-	"username": "kirabin_pin",
-	"board_names": ["Reference", "Art"]  # leave blank to download all boards
+	"username": "your_username",
+	"board_names": ["Your", "Boards"]  # leave blank [] to download all boards
 }
 
 pinterest = Pinterest(settings)
