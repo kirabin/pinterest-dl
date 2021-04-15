@@ -1,5 +1,5 @@
 # pinterest-dl
-
+This script allows you to download all or specific public boards from Pinterest.
 
 ## Setup
 1. Run `make setup`
