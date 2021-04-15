@@ -5,25 +5,23 @@ import requests
 import json
 import shutil
 import os
-
+import sys
+from pathlib import Path
 
 class Pinterest(PinterestBase):
 
 	def __init__(self, settings):
 		super().__init__(username=settings['username'])
 
-		self.path = self.create_dir()
+		self.path = os.path.join(Path(os.getcwd()).parent.absolute(), 'Pins')
+		self.create_dir()
 		self.boards = self.get_boards(settings['board_names'])
 		self.downloaded_images = self.get_downloaded_images()
 		self.new_downloads_count = 0
 
 	def create_dir(self):
-		path = os.path.join(os.getcwd(), 'pinterest')
-
-		if not os.path.exists(path):
-			os.mkdir(path)
-
-		return path
+		if not os.path.exists(self.path):
+			os.mkdir(self.path)
 
 	def create_dir_board(self, board):
 		path = os.path.join(self.path, board['name'])
@@ -77,17 +75,14 @@ class Pinterest(PinterestBase):
 			print('\n' + board['name'])
 
 			path = self.create_dir_board(board)
-
 			board['pins'] = self.get_board_pins(board)
 			for pin in board['pins']:
-
 				if pin['id'] in self.downloaded_images:
 					print("Skipping:", pin['id'])
 					continue
-
 				try:
 					url = pin['images']['orig']['url']
-					extension = os.path.splitext(url)[1]  # str(url)[str(url).rfind('.'):]
+					extension = os.path.splitext(url)[1]
 					self.download_image(url, f"{path}/{pin['id']}{extension}", pin['id'])
 				except KeyError:
 					pass
@@ -95,12 +90,12 @@ class Pinterest(PinterestBase):
 		print(f"\n{self.new_downloads_count} images were downloaded")
 
 
-# Customize settings
-settings = {
-	"username": "your_username",
-	"board_names": ["Your", "Boards"]  # leave blank [] to download all boards
-}
-
-pinterest = Pinterest(settings)
-pinterest.download_boards()
-pinterest.delete_temp_files()
+if __name__ == "__main__":
+	settings = {
+		"username": sys.argv[1],
+		"board_names": sys.argv[2:]
+	}
+	print(f"Username: {settings['username']}")
+	print(f"Boards: {settings['board_names'] or 'all'}")
+	pinterest = Pinterest(settings)
+	pinterest.download_boards()
