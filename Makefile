@@ -1,10 +1,7 @@
 # Leave Boards blank if you want to download all public boards
 
-USER	=
-BOARDS	=
-
-USER_EXAMPLE = my_user_name
-BOARDS_EXAMPLE = board1 board2 board3
+USER	=  # my_user_name
+BOARDS	=  # boards seaparated by space
 
 all:
 	@bash run.sh $(USER) $(BOARDS)

@@ -8,6 +8,7 @@ import os
 import sys
 from pathlib import Path
 
+
 class Pinterest(PinterestBase):
 
 	def __init__(self, settings):
